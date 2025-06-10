@@ -6,21 +6,39 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 // This token variable will be private to this module
 let token = null;
 
+// This will hold the logout function from our main App component
+let onAuthFailureCallback = null;
+
 // This function allows other parts of our app (like App.jsx) to set the token
-const setToken = newToken => {
-  token = `Bearer ${newToken}`;
+const setToken = (newToken) => {
+  token = newToken ? `Bearer ${newToken}` : null;
+};
+
+// This function lets our App component register its logout function
+const setOnAuthFailure = (callback) => {
+  onAuthFailureCallback = callback;
 };
 
 // A helper function to handle API responses consistently
 const handleResponse = async (response) => {
+  // If the server says we are unauthorized, the token is bad.
+  if (response.status === 401) {
+    // Trigger the automatic logout by calling the function App.jsx gave us
+    if (onAuthFailureCallback) onAuthFailureCallback();
+    // Provide a clear error message for the user
+    throw new Error('Your session has expired. Please log in again.');
+  }
+
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
   }
+
   if (response.status === 204) return null; // For successful DELETE requests
   return response.json();
 };
-// --- NEW LOGIN FUNCTION ---
+
+// --- Authentication Functions ---
 const login = async (credentials) => {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -29,11 +47,12 @@ const login = async (credentials) => {
     });
     return handleResponse(response);
 };
-// --- Tenant API Functions ---
+
+// --- Tenant API Functions (no changes needed here) ---
 
 const getTenants = async () => {
   const response = await fetch(`${API_BASE_URL}/tenants`, {
-    headers: { 'Authorization': token } // Send the token with the request
+    headers: { 'Authorization': token }
   });
   return handleResponse(response);
 };
@@ -64,8 +83,6 @@ const deleteTenant = async (tenantId) => {
     return handleResponse(response);
 };
 
-// --- Payment API Functions ---
-
 const createPayment = async (tenantId, paymentData) => {
     const response = await fetch(`${API_BASE_URL}/tenants/${tenantId}/payments`, {
         method: 'POST',
@@ -77,10 +94,10 @@ const createPayment = async (tenantId, paymentData) => {
 
 
 // --- The object that we will export ---
-// This exposes our functions to the rest of the application.
 const apiService = {
-  login,
+  setOnAuthFailure,
   setToken,
+  login,
   getTenants,
   createTenant,
   updateTenant,
