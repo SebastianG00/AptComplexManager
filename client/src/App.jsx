@@ -5,7 +5,8 @@ import ApartmentLogin from './ApartmentLogin';
 import ApartmentManager from './ApartmentManager';
 
 // 1. MODIFY THIS IMPORT to include setOnAuthFailure
-import apiService, { setOnAuthFailure } from '../services/apiService.js';
+import apiService from '../services/apiService.js';
+import { setOnAuthFailure } from '../services/apiService.js';
 
 const App = () => {
   const [token, setToken] = useState(null);

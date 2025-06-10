@@ -14,11 +14,6 @@ const setToken = (newToken) => {
   token = newToken ? `Bearer ${newToken}` : null;
 };
 
-// This function lets our App component register its logout function
-const setOnAuthFailure = (callback) => {
-  onAuthFailureCallback = callback;
-};
-
 // A helper function to handle API responses consistently
 const handleResponse = async (response) => {
   // If the server says we are unauthorized, the token is bad.
@@ -92,10 +87,13 @@ const createPayment = async (tenantId, paymentData) => {
     return handleResponse(response);
 };
 
+// This function will be a "named export"
+export const setOnAuthFailure = (callback) => {
+  onAuthFailureCallback = callback;
+};
 
 // --- The object that we will export ---
 const apiService = {
-  setOnAuthFailure,
   setToken,
   login,
   getTenants,
